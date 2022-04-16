@@ -1,18 +1,43 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
+import { useCreateUserWithEmailAndPassword, useUpdateProfile } from 'react-firebase-hooks/auth';
+import auth from "../../firebase.init";
+import SocialLogin from "../Login/SocialLogin/SocialLogin";
+import { updateProfile } from "firebase/auth";
+
 
 const Register = () => {
+  const [agree,setAgree]=useState(false)
+
+  const [
+    createUserWithEmailAndPassword,
+    user,
+    loading,
+    error,
+  ] = useCreateUserWithEmailAndPassword(auth);
+  const [updateProfile, updating, error1] = useUpdateProfile(auth);
   const navigate=useNavigate();
 
   const handleLogin= ()=>{
-    navigate(`/login`)
-  }
-  const handleRegister = event =>{
-    event.preventDefault();
-    console.log(event.target.email.value)
+    navigate('/login');
   }
 
+  if(user){
+    console.log('user',user)
+  }
+  const handleRegister = async (event) =>{
+    event.preventDefault();
+    const name=event.target.name.value;
+    const email=event.target.email.value;
+    const password=event.target.password.value;
+    // const agree =event.target.terms.checked;
+
+    await createUserWithEmailAndPassword(email,password);
+    await updateProfile({ displayName: name });
+     console.log('Updated profile');
+     navigate('/home')
+  };
 
   return (
     <div className="mx-auto w-50">
@@ -34,10 +59,15 @@ const Register = () => {
           <Form.Label>Password</Form.Label>
           <Form.Control type="password" name="password" placeholder="Password" />
         </Form.Group>
-
-        <input className="w-100 p-2"  type="submit" value="Register" />
+          <input onClick={()=> setAgree(!agree)} type="checkbox" name="terms" id="terms" />
+          {/* <label className={agree ? "text-primary" : "text-danger"} htmlFor="terms">Accept Genius Car terms and Conditions</label> */}
+          <label className={`ps-2 ${ agree ? '' : 'text-danger'}`} htmlFor="terms">Accept Genius Car terms and Conditions</label>
+        <input
+        disabled={!agree} 
+         className="w-50 btn btn-primary mx-auto d-block mb-2 p-2 "  type="submit" value="Register" />
         <p >Already Have a Account <Link className="text-danger text-decoration-none font-bold" to='/login' onClick={handleLogin} >Login</Link></p>
       </Form>
+      <SocialLogin></SocialLogin>
     </div>
   );
 };
